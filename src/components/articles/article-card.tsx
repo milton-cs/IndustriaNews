@@ -32,7 +32,8 @@ export function ArticleCard({ article }: { article: Article }) {
               src={article.cover_image_url}
               alt={article.title}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
             <div className={`w-full h-full bg-gradient-to-br ${getGradient(article.category?.name)} flex items-center justify-center`}>

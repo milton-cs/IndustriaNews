@@ -3,7 +3,10 @@ import { createAdminClient } from "@/lib/supabase/admin"
 
 const parser = new Parser({
   customFields: {
-    item: [['media:content', 'media:content', { keepArray: true }]],
+    item: [
+      ['media:content', 'media:content', { keepArray: true }],
+      ['content:encoded', 'content:encoded'],
+    ],
   },
 })
 
@@ -46,6 +49,19 @@ function slugify(text: string): string {
     .substring(0, 200)
 }
 
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
 export async function fetchAndStoreArticles(): Promise<{ imported: number; errors: number }> {
   const supabase = createAdminClient()
   let imported = 0
@@ -59,8 +75,10 @@ export async function fetchAndStoreArticles(): Promise<{ imported: number; error
         if (!item.title || !item.link) continue
 
         const slug = slugify(item.title) + "-" + Date.now().toString(36)
-        const content = item.contentSnippet || item.content || item.title
-        const excerpt = (item.contentSnippet || "").substring(0, 200)
+        // Prefer full content (content:encoded > content > contentSnippet)
+        const rawContent = item["content:encoded"] || item.content || item.contentSnippet || item.title
+        const content = stripHtml(rawContent)
+        const excerpt = (item.contentSnippet || content).substring(0, 250)
 
         const { error } = await supabase.from("articles").insert({
           title: item.title,
