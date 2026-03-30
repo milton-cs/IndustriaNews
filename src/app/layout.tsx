@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     template: "%s | Indústria News",
   },
   description: "O portal de notícias e inteligência para o setor industrial brasileiro.",
+  metadataBase: new URL("https://industrianews.com"),
   openGraph: {
     siteName: "Indústria News",
     locale: "pt_BR",

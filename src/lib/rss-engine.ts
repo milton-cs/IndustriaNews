@@ -1,5 +1,64 @@
 import Parser from "rss-parser"
+import Anthropic from "@anthropic-ai/sdk"
 import { createAdminClient } from "@/lib/supabase/admin"
+
+const anthropic = process.env.ANTHROPIC_API_KEY
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  : null
+
+const CATEGORIES_MAP: Record<string, string> = {
+  "alimentos-e-bebidas": "Alimentos e Bebidas",
+  "automotivo": "Automotivo",
+  "textil-e-confeccao": "Têxtil e Confecção",
+  "quimica-e-petroquimica": "Química e Petroquímica",
+  "metalurgia-e-siderurgia": "Metalurgia e Siderurgia",
+  "maquinas-e-equipamentos": "Máquinas e Equipamentos",
+  "papel-e-celulose": "Papel e Celulose",
+  "farmaceutica-e-cosmeticos": "Farmacêutica e Cosméticos",
+  "mineracao": "Mineração",
+  "petroleo-e-gas": "Petróleo e Gás",
+  "edificacoes": "Edificações",
+  "infraestrutura": "Infraestrutura",
+  "energia-eletrica": "Energia Elétrica",
+  "saneamento-e-residuos": "Saneamento e Resíduos",
+  "industria-4-0": "Indústria 4.0",
+  "esg-e-sustentabilidade": "ESG e Sustentabilidade",
+  "defesa-e-aeroespacial": "Defesa e Aeroespacial",
+}
+
+async function aiCurate(title: string, excerpt: string): Promise<{ seoTitle: string; categorySlug: string } | null> {
+  if (!anthropic) return null
+  try {
+    const categorySlugs = Object.keys(CATEGORIES_MAP).join(", ")
+    const msg = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 200,
+      messages: [{
+        role: "user",
+        content: `Você é um editor do portal Indústria News. Dado este artigo:
+
+Título: ${title}
+Resumo: ${excerpt.substring(0, 300)}
+
+Faça:
+1. Reescreva o título para SEO (máximo 80 caracteres, direto, informativo, em português do Brasil)
+2. Classifique em UMA destas categorias: ${categorySlugs}
+
+Responda EXATAMENTE neste formato JSON:
+{"seoTitle": "título reescrito", "categorySlug": "slug-da-categoria"}`
+      }],
+    })
+    const text = msg.content[0].type === "text" ? msg.content[0].text : ""
+    const jsonMatch = text.match(/\{[^}]+\}/)
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0])
+      if (parsed.seoTitle && parsed.categorySlug) return parsed
+    }
+    return null
+  } catch {
+    return null
+  }
+}
 
 const parser = new Parser({
   customFields: {
@@ -185,15 +244,33 @@ export async function fetchAndStoreArticles(): Promise<{ imported: number; error
           imageUrl = imageUrl.replace('http://', 'https://')
         }
 
+        // AI curation: rewrite title for SEO + classify category
+        const aiResult = await aiCurate(item.title, excerpt)
+        let categoryId: string | null = null
+        let seoTitle: string | null = null
+
+        if (aiResult) {
+          seoTitle = aiResult.seoTitle
+          // Look up category ID by slug
+          const { data: cat } = await supabase
+            .from("categories")
+            .select("id")
+            .eq("slug", aiResult.categorySlug)
+            .single()
+          if (cat) categoryId = cat.id
+        }
+
         const { error } = await supabase.from("articles").insert({
-          title: item.title,
+          title: seoTitle || item.title,
+          seo_title: seoTitle,
           slug,
           content,
           excerpt,
           cover_image_url: imageUrl,
+          category_id: categoryId,
           source_url: item.link,
           source_name: source.name,
-          is_ai_curated: false,
+          is_ai_curated: !!aiResult,
           status: "published",
           published_at: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
         })
