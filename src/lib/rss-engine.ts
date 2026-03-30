@@ -95,6 +95,42 @@ const RSS_SOURCES = [
   { url: "https://www.fiesp.com.br/feed/", name: "FIESP" },
 ]
 
+// Fallback images by keyword (Unsplash, free, high-quality)
+const FALLBACK_IMAGES: Record<string, string> = {
+  mineração: 'https://images.unsplash.com/photo-1578496479914-7ef3b0193be3?w=800&q=80',
+  mineracao: 'https://images.unsplash.com/photo-1578496479914-7ef3b0193be3?w=800&q=80',
+  automotivo: 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=800&q=80',
+  metalurgia: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=800&q=80',
+  siderurgia: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=800&q=80',
+  energia: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80',
+  solar: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80',
+  eólica: 'https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?w=800&q=80',
+  indústria: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80',
+  automação: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80',
+  robótica: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80',
+  farmacêutico: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=800&q=80',
+  petróleo: 'https://images.unsplash.com/photo-1513828583688-c52646db42da?w=800&q=80',
+  construção: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80',
+  logística: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
+  alimentos: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80',
+  têxtil: 'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&q=80',
+  química: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&q=80',
+  papel: 'https://images.unsplash.com/photo-1585776245991-cf89dd7fc73a?w=800&q=80',
+  sustentabilidade: 'https://images.unsplash.com/photo-1473773508845-188df298d2d1?w=800&q=80',
+  esg: 'https://images.unsplash.com/photo-1473773508845-188df298d2d1?w=800&q=80',
+  defesa: 'https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=800&q=80',
+  aeroespacial: 'https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=800&q=80',
+}
+const DEFAULT_FALLBACK = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80'
+
+function getFallbackImage(title: string): string {
+  const lower = title.toLowerCase()
+  for (const [keyword, url] of Object.entries(FALLBACK_IMAGES)) {
+    if (lower.includes(keyword)) return url
+  }
+  return DEFAULT_FALLBACK
+}
+
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -136,10 +172,13 @@ export async function fetchAndStoreArticles(): Promise<{ imported: number; error
         const content = stripHtml(rawContent)
         const excerpt = (item.contentSnippet || content).substring(0, 250)
 
-        // Try RSS image first, then fetch og:image from article page
+        // Try RSS image first, then og:image, then keyword-based fallback
         let imageUrl = extractImageUrl(item)
         if (!imageUrl && item.link) {
           imageUrl = await fetchOgImage(item.link)
+        }
+        if (!imageUrl) {
+          imageUrl = getFallbackImage(item.title || '')
         }
 
         const { error } = await supabase.from("articles").insert({
