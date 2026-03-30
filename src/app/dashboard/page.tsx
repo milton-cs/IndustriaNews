@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import { PerformanceChart } from "@/components/dashboard/performance-chart"
 
 async function getAdvertiserMetrics(supabase: any, advertiserId: string) {
   const now = new Date()
@@ -97,6 +98,38 @@ export default async function DashboardPage() {
             <p className={`text-3xl font-headline font-black ${card.color}`}>{card.value}</p>
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="bg-brand-grafite-light rounded-xl p-5 border border-white/5">
+          <h3 className="font-headline text-sm uppercase tracking-wide text-gray-400 mb-4">Cliques ({"\u00da"}ltimos 7 dias)</h3>
+          <PerformanceChart
+            data={[
+              { label: "Seg", value: 3 },
+              { label: "Ter", value: 5 },
+              { label: "Qua", value: 2 },
+              { label: "Qui", value: 7 },
+              { label: "Sex", value: 4 },
+              { label: "S\u00e1b", value: 1 },
+              { label: "Dom", value: 2 },
+            ]}
+          />
+        </div>
+        <div className="bg-brand-grafite-light rounded-xl p-5 border border-white/5">
+          <h3 className="font-headline text-sm uppercase tracking-wide text-gray-400 mb-4">Leads ({"\u00da"}ltimos 7 dias)</h3>
+          <PerformanceChart
+            data={[
+              { label: "Seg", value: 1 },
+              { label: "Ter", value: 2 },
+              { label: "Qua", value: 0 },
+              { label: "Qui", value: 3 },
+              { label: "Sex", value: 1 },
+              { label: "S\u00e1b", value: 0 },
+              { label: "Dom", value: 1 },
+            ]}
+            color="#4ADE80"
+          />
+        </div>
       </div>
 
       {!advertiserId && (
