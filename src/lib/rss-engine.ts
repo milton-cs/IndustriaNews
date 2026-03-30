@@ -1,7 +1,30 @@
 import Parser from "rss-parser"
 import { createAdminClient } from "@/lib/supabase/admin"
 
-const parser = new Parser()
+const parser = new Parser({
+  customFields: {
+    item: [['media:content', 'media:content', { keepArray: true }]],
+  },
+})
+
+function extractImageUrl(item: any): string | null {
+  // 1. enclosure
+  if (item.enclosure?.url) return item.enclosure.url
+
+  // 2. media:content
+  const media = item['media:content']
+  if (media) {
+    if (Array.isArray(media) && media[0]?.$?.url) return media[0].$.url
+    if (media.$?.url) return media.$.url
+  }
+
+  // 3. Extract <img> from content
+  const html = item['content:encoded'] || item.content || ''
+  const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/)
+  if (imgMatch?.[1]) return imgMatch[1]
+
+  return null
+}
 
 const RSS_SOURCES = [
   { url: "https://noticias.portaldaindustria.com.br/rss", name: "Portal da Indústria" },
@@ -44,7 +67,7 @@ export async function fetchAndStoreArticles(): Promise<{ imported: number; error
           slug,
           content,
           excerpt,
-          cover_image_url: item.enclosure?.url || null,
+          cover_image_url: extractImageUrl(item),
           source_url: item.link,
           source_name: source.name,
           is_ai_curated: false,

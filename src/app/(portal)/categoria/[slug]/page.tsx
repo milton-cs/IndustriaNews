@@ -39,7 +39,7 @@ export default async function CategoryPage({ params }: Props) {
 
   const { data: rows } = await supabase
     .from("articles")
-    .select("title, slug, excerpt, cover_image_url, published_at, categories(name, slug)")
+    .select("title, slug, excerpt, cover_image_url, published_at, source_name, categories(name, slug)")
     .eq("status", "published")
     .eq("category_id", category.id)
     .order("published_at", { ascending: false })

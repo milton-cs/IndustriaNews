@@ -52,11 +52,18 @@ export function ArticleCard({ article }: { article: Article }) {
           {article.excerpt && (
             <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{article.excerpt}</p>
           )}
-          {article.published_at && (
-            <time className="text-xs text-gray-400 mt-3 block">
-              {new Date(article.published_at).toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" })}
-            </time>
-          )}
+          <div className="flex items-center gap-2 mt-3 text-xs text-gray-400">
+            {article.published_at && (
+              <time>
+                {new Date(article.published_at).toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" })}
+              </time>
+            )}
+            {article.source_name && (
+              <span className="before:content-['·'] before:mr-2">
+                {article.source_name}
+              </span>
+            )}
+          </div>
         </div>
       </article>
     </Link>

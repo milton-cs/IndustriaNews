@@ -22,7 +22,7 @@ export function Header() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/revista" className="font-headline text-sm uppercase tracking-wide text-gray-600 hover:text-brand-lavanda transition-colors">
+          <Link href="/revista" className="font-headline text-sm uppercase tracking-wide px-4 py-2 bg-brand-lavanda/10 text-brand-lavanda border border-brand-lavanda/30 rounded-lg hover:bg-brand-lavanda hover:text-white transition-all">
             Revista
           </Link>
           <Link href="/sobre" className="font-headline text-sm uppercase tracking-wide text-gray-600 hover:text-brand-lavanda transition-colors">
@@ -48,7 +48,7 @@ export function Header() {
       {/* Mobile menu */}
       {menuOpen && (
         <nav className="md:hidden border-t border-gray-200 bg-white px-4 py-4 space-y-3">
-          <Link href="/revista" onClick={() => setMenuOpen(false)} className="block font-headline text-sm uppercase tracking-wide text-gray-600 hover:text-brand-lavanda py-2">
+          <Link href="/revista" onClick={() => setMenuOpen(false)} className="block font-headline text-sm uppercase tracking-wide text-brand-lavanda border border-brand-lavanda/30 rounded-lg px-4 py-2 text-center hover:bg-brand-lavanda hover:text-white transition-all">
             Revista
           </Link>
           <Link href="/sobre" onClick={() => setMenuOpen(false)} className="block font-headline text-sm uppercase tracking-wide text-gray-600 hover:text-brand-lavanda py-2">

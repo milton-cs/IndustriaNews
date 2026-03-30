@@ -4,6 +4,7 @@ export type ArticleRow = {
   excerpt: string | null
   cover_image_url: string | null
   published_at: string | null
+  source_name: string | null
   categories: { name: string; slug: string }[] | { name: string; slug: string } | null
 }
 
@@ -13,6 +14,7 @@ export type Article = {
   excerpt: string | null
   cover_image_url: string | null
   published_at: string | null
+  source_name: string | null
   category: { name: string; slug: string } | null
 }
 
@@ -29,6 +31,7 @@ export function normalizeArticle(row: ArticleRow): Article {
     excerpt: row.excerpt,
     cover_image_url: row.cover_image_url,
     published_at: row.published_at,
+    source_name: row.source_name,
     category,
   }
 }
