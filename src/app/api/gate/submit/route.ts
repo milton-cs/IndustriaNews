@@ -1,4 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { sendWhatsAppMessage, formatLeadNotification } from "@/lib/whatsapp"
+import { sendLeadNotification } from "@/lib/email"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
@@ -29,6 +31,49 @@ export async function POST(request: NextRequest) {
     article_id: articleId || null,
     metadata: { company, position },
   })
+
+  // Get article title for notification
+  let articleTitle = ""
+  if (articleId) {
+    const { data: article } = await supabase.from("articles").select("title").eq("id", articleId).single()
+    if (article) articleTitle = article.title
+  }
+
+  // Notify active advertisers (Plano Ouro) via WhatsApp + Email
+  const { data: advertisers } = await supabase
+    .from("advertisers")
+    .select("contact_phone, contact_email, contact_name, company_name, plan")
+    .eq("status", "active")
+    .eq("plan", "ouro")
+
+  if (advertisers && advertisers.length > 0) {
+    for (const adv of advertisers) {
+      // WhatsApp notification
+      if (adv.contact_phone) {
+        const msg = formatLeadNotification({
+          leadName: name || "",
+          leadCompany: company || "",
+          leadEmail: email,
+          leadPhone: phone || "",
+          articleTitle,
+        })
+        sendWhatsAppMessage(adv.contact_phone, msg).catch(() => {})
+      }
+
+      // Email notification
+      if (adv.contact_email) {
+        sendLeadNotification({
+          to: adv.contact_email,
+          advertiserName: adv.contact_name || adv.company_name,
+          leadName: name || "",
+          leadCompany: company || "",
+          leadEmail: email,
+          leadPhone: phone || "",
+          articleTitle,
+        }).catch(() => {})
+      }
+    }
+  }
 
   const response = NextResponse.json({ ok: true, readerId: reader.id })
   response.cookies.set("reader_id", reader.id, {
