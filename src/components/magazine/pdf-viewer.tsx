@@ -19,27 +19,22 @@ const PdfPage = forwardRef<HTMLDivElement, PageProps>(({ pageNum, pdfDoc, width,
 
   useEffect(() => {
     if (!pdfDoc || !canvasRef.current || rendered) return
-
     const renderPage = async () => {
       try {
         const page = await pdfDoc.getPage(pageNum)
         const viewport = page.getViewport({ scale: 1 })
         const scale = Math.min(width / viewport.width, height / viewport.height)
         const scaledViewport = page.getViewport({ scale })
-
         const canvas = canvasRef.current!
         canvas.width = scaledViewport.width
         canvas.height = scaledViewport.height
-
         await page.render({
           canvasContext: canvas.getContext("2d")!,
           viewport: scaledViewport,
         }).promise
-
         setRendered(true)
       } catch {}
     }
-
     renderPage()
   }, [pdfDoc, pageNum, width, height, rendered])
 
@@ -61,11 +56,13 @@ export function PdfViewer({ pdfUrl, title }: { pdfUrl: string; title: string }) 
   const [numPages, setNumPages] = useState(0)
   const [currentPage, setCurrentPage] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [zoom, setZoom] = useState(1)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [copied, setCopied] = useState(false)
   const [dimensions, setDimensions] = useState({ width: 500, height: 700 })
   const containerRef = useRef<HTMLDivElement>(null)
   const flipBookRef = useRef<any>(null)
 
-  // Responsive dimensions
   useEffect(() => {
     const updateSize = () => {
       const w = Math.min(window.innerWidth - 48, 1200)
@@ -78,7 +75,6 @@ export function PdfViewer({ pdfUrl, title }: { pdfUrl: string; title: string }) 
     return () => window.removeEventListener("resize", updateSize)
   }, [])
 
-  // Load PDF
   useEffect(() => {
     const loadPdf = async () => {
       try {
@@ -97,22 +93,48 @@ export function PdfViewer({ pdfUrl, title }: { pdfUrl: string; title: string }) 
     loadPdf()
   }, [pdfUrl])
 
-  const onFlip = useCallback((e: any) => {
-    setCurrentPage(e.data)
-  }, [])
-
+  const onFlip = useCallback((e: any) => setCurrentPage(e.data), [])
   const goNext = () => flipBookRef.current?.pageFlip()?.flipNext()
   const goPrev = () => flipBookRef.current?.pageFlip()?.flipPrev()
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") goNext()
       if (e.key === "ArrowLeft") goPrev()
+      if (e.key === "+" || e.key === "=") setZoom(z => Math.min(z + 0.25, 2))
+      if (e.key === "-") setZoom(z => Math.max(z - 0.25, 0.75))
     }
     window.addEventListener("keydown", handleKey)
     return () => window.removeEventListener("keydown", handleKey)
   }, [])
+
+  // Fullscreen
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener("fullscreenchange", handler)
+    return () => document.removeEventListener("fullscreenchange", handler)
+  }, [])
+
+  const toggleFullscreen = async () => {
+    if (!containerRef.current) return
+    if (document.fullscreenElement) {
+      await document.exitFullscreen()
+    } else {
+      await containerRef.current.requestFullscreen()
+    }
+  }
+
+  const shareUrl = typeof window !== "undefined" ? window.location.href : ""
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      await navigator.share({ title: `Revista ${title}`, url: shareUrl })
+    } else {
+      await navigator.clipboard.writeText(shareUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   if (loading) {
     return (
@@ -120,7 +142,7 @@ export function PdfViewer({ pdfUrl, title }: { pdfUrl: string; title: string }) 
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-brand-lavanda/30 border-t-brand-lavanda rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-400 font-headline text-sm uppercase">Carregando revista...</p>
-          <p className="text-gray-300 text-xs mt-2">130 páginas · pode levar alguns segundos</p>
+          <p className="text-gray-300 text-xs mt-2">130 páginas</p>
         </div>
       </div>
     )
@@ -131,42 +153,79 @@ export function PdfViewer({ pdfUrl, title }: { pdfUrl: string; title: string }) 
       <div className="text-center py-16">
         <p className="text-gray-400 mb-4">Não foi possível carregar a revista.</p>
         <a href={pdfUrl} target="_blank" rel="noopener noreferrer"
-          className="px-6 py-3 bg-brand-lavanda text-white font-headline uppercase rounded-lg hover:bg-brand-lavanda-dark transition-colors">
+          className="px-6 py-3 bg-brand-lavanda text-white font-headline uppercase rounded-lg">
           Abrir PDF Diretamente
         </a>
       </div>
     )
   }
 
+  const zoomedW = Math.floor(dimensions.width * zoom)
+  const zoomedH = Math.floor(dimensions.height * zoom)
+
   return (
-    <div ref={containerRef}>
-      {/* Controls top */}
-      <div className="flex items-center justify-between mb-4 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-100">
-        <button onClick={goPrev} disabled={currentPage <= 0}
-          className="px-4 py-2 text-sm font-headline uppercase border border-gray-200 rounded-lg hover:bg-brand-lavanda hover:text-white hover:border-brand-lavanda transition-all disabled:opacity-30">
-          ← Anterior
-        </button>
-        <span className="text-sm font-headline text-brand-lavanda">
-          Página {currentPage + 1} de {numPages}
-        </span>
-        <button onClick={goNext} disabled={currentPage >= numPages - 1}
-          className="px-4 py-2 text-sm font-headline uppercase border border-gray-200 rounded-lg hover:bg-brand-lavanda hover:text-white hover:border-brand-lavanda transition-all disabled:opacity-30">
-          Próxima →
-        </button>
+    <div ref={containerRef} className={isFullscreen ? "bg-gray-900 p-4 h-screen flex flex-col" : ""}>
+      {/* Toolbar */}
+      <div className={`flex items-center justify-between mb-3 rounded-xl px-4 py-2.5 shadow-sm border ${isFullscreen ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"}`}>
+        {/* Left: nav */}
+        <div className="flex items-center gap-2">
+          <button onClick={goPrev} disabled={currentPage <= 0}
+            className={`px-3 py-1.5 text-xs font-headline uppercase border rounded-lg transition-all disabled:opacity-30 ${isFullscreen ? "border-gray-600 text-gray-300 hover:bg-brand-lavanda hover:text-white" : "border-gray-200 hover:bg-brand-lavanda hover:text-white"}`}>
+            ←
+          </button>
+          <span className={`text-sm font-headline ${isFullscreen ? "text-brand-lavanda-light" : "text-brand-lavanda"}`}>
+            {currentPage + 1} / {numPages}
+          </span>
+          <button onClick={goNext} disabled={currentPage >= numPages - 1}
+            className={`px-3 py-1.5 text-xs font-headline uppercase border rounded-lg transition-all disabled:opacity-30 ${isFullscreen ? "border-gray-600 text-gray-300 hover:bg-brand-lavanda hover:text-white" : "border-gray-200 hover:bg-brand-lavanda hover:text-white"}`}>
+            →
+          </button>
+        </div>
+
+        {/* Center: zoom */}
+        <div className="flex items-center gap-1">
+          <button onClick={() => setZoom(z => Math.max(z - 0.25, 0.75))}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg text-lg transition-colors ${isFullscreen ? "text-gray-300 hover:bg-gray-700" : "text-gray-500 hover:bg-gray-100"}`}>
+            −
+          </button>
+          <span className={`text-xs font-headline min-w-[3rem] text-center ${isFullscreen ? "text-gray-400" : "text-gray-500"}`}>
+            {Math.round(zoom * 100)}%
+          </span>
+          <button onClick={() => setZoom(z => Math.min(z + 0.25, 2))}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg text-lg transition-colors ${isFullscreen ? "text-gray-300 hover:bg-gray-700" : "text-gray-500 hover:bg-gray-100"}`}>
+            +
+          </button>
+        </div>
+
+        {/* Right: actions */}
+        <div className="flex items-center gap-1">
+          <button onClick={toggleFullscreen} title="Tela Cheia"
+            className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-colors ${isFullscreen ? "text-gray-300 hover:bg-gray-700" : "text-gray-500 hover:bg-gray-100"}`}>
+            {isFullscreen ? "✕" : "⛶"}
+          </button>
+          <button onClick={handleShare} title={copied ? "Link copiado!" : "Compartilhar"}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-colors ${copied ? "text-green-400" : isFullscreen ? "text-gray-300 hover:bg-gray-700" : "text-gray-500 hover:bg-gray-100"}`}>
+            {copied ? "✓" : "↗"}
+          </button>
+          <a href={pdfUrl} download title="Baixar PDF" target="_blank" rel="noopener noreferrer"
+            className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-colors ${isFullscreen ? "text-gray-300 hover:bg-gray-700" : "text-gray-500 hover:bg-gray-100"}`}>
+            ↓
+          </a>
+        </div>
       </div>
 
       {/* Flipbook */}
-      <div className="flex justify-center bg-gray-100 rounded-2xl p-4 md:p-8 shadow-inner">
+      <div className={`flex justify-center rounded-2xl p-2 md:p-6 shadow-inner overflow-auto ${isFullscreen ? "bg-gray-800 flex-1" : "bg-gray-100"}`}>
         {/* @ts-ignore */}
         <HTMLFlipBook
           ref={flipBookRef}
-          width={dimensions.width}
-          height={dimensions.height}
+          width={zoomedW}
+          height={zoomedH}
           size="stretch"
-          minWidth={300}
-          maxWidth={600}
-          minHeight={420}
-          maxHeight={840}
+          minWidth={280}
+          maxWidth={700}
+          minHeight={400}
+          maxHeight={950}
           showCover={true}
           onFlip={onFlip}
           className="shadow-2xl"
@@ -174,7 +233,7 @@ export function PdfViewer({ pdfUrl, title }: { pdfUrl: string; title: string }) 
           startPage={0}
           drawShadow={true}
           flippingTime={600}
-          usePortrait={window.innerWidth < 768}
+          usePortrait={typeof window !== "undefined" && window.innerWidth < 768}
           startZIndex={0}
           autoSize={true}
           maxShadowOpacity={0.5}
@@ -186,38 +245,14 @@ export function PdfViewer({ pdfUrl, title }: { pdfUrl: string; title: string }) 
           disableFlipByClick={false}
         >
           {Array.from({ length: numPages }, (_, i) => (
-            <PdfPage
-              key={i}
-              pageNum={i + 1}
-              pdfDoc={pdfDoc}
-              width={dimensions.width}
-              height={dimensions.height}
-            />
+            <PdfPage key={i} pageNum={i + 1} pdfDoc={pdfDoc} width={zoomedW} height={zoomedH} />
           ))}
         </HTMLFlipBook>
       </div>
 
-      {/* Controls bottom */}
-      <div className="flex items-center justify-between mt-4 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-100">
-        <button onClick={goPrev} disabled={currentPage <= 0}
-          className="px-4 py-2 text-sm font-headline uppercase border border-gray-200 rounded-lg hover:bg-brand-lavanda hover:text-white hover:border-brand-lavanda transition-all disabled:opacity-30">
-          ← Anterior
-        </button>
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-400">Ir para:</span>
-          <input type="number" min={1} max={numPages} value={currentPage + 1}
-            onChange={(e) => flipBookRef.current?.pageFlip()?.flip(parseInt(e.target.value) - 1)}
-            className="w-14 px-2 py-1 text-center border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-lavanda/50" />
-          <span className="text-gray-400">de {numPages}</span>
-        </div>
-        <button onClick={goNext} disabled={currentPage >= numPages - 1}
-          className="px-4 py-2 text-sm font-headline uppercase border border-gray-200 rounded-lg hover:bg-brand-lavanda hover:text-white hover:border-brand-lavanda transition-all disabled:opacity-30">
-          Próxima →
-        </button>
-      </div>
-
-      <p className="text-center text-xs text-gray-400 mt-4">
-        Clique nas bordas da página ou arraste para virar. Use as setas ← → do teclado.
+      {/* Footer hint */}
+      <p className={`text-center text-xs mt-3 ${isFullscreen ? "text-gray-500" : "text-gray-400"}`}>
+        Clique nas bordas para virar · Setas ← → · Teclas +/- para zoom · Arraste para folhear
       </p>
     </div>
   )

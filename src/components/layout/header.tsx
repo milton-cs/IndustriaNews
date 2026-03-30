@@ -9,14 +9,14 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-brand-offwhite/95 backdrop-blur-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
         <Link href="/" className="shrink-0">
           <Image
             src="/logo-positiva.png"
             alt="Indústria News"
-            width={120}
-            height={60}
-            className="h-12 sm:h-14 w-auto"
+            width={180}
+            height={90}
+            className="h-16 sm:h-20 w-auto"
             priority
           />
         </Link>
