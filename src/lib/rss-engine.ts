@@ -180,6 +180,10 @@ export async function fetchAndStoreArticles(): Promise<{ imported: number; error
         if (!imageUrl) {
           imageUrl = getFallbackImage(item.title || '')
         }
+        // Always ensure HTTPS
+        if (imageUrl && imageUrl.startsWith('http://')) {
+          imageUrl = imageUrl.replace('http://', 'https://')
+        }
 
         const { error } = await supabase.from("articles").insert({
           title: item.title,
