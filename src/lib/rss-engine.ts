@@ -65,6 +65,26 @@ function extractImageUrl(item: any): string | null {
   return null
 }
 
+async function fetchOgImage(articleUrl: string): Promise<string | null> {
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 5000)
+    const res = await fetch(articleUrl, { signal: controller.signal, headers: { 'User-Agent': 'IndustriaNewsBot/1.0' } })
+    clearTimeout(timeout)
+    const html = await res.text()
+    // Try og:image
+    const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/)
+      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/)
+    if (ogMatch?.[1] && isValidArticleImage(ogMatch[1])) return ogMatch[1]
+    // Try twitter:image
+    const twMatch = html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/)
+    if (twMatch?.[1] && isValidArticleImage(twMatch[1])) return twMatch[1]
+    return null
+  } catch {
+    return null
+  }
+}
+
 const RSS_SOURCES = [
   { url: "https://noticias.portaldaindustria.com.br/rss", name: "Portal da Indústria" },
   { url: "https://industriasa.com.br/feed/", name: "Indústria SA" },
@@ -116,12 +136,18 @@ export async function fetchAndStoreArticles(): Promise<{ imported: number; error
         const content = stripHtml(rawContent)
         const excerpt = (item.contentSnippet || content).substring(0, 250)
 
+        // Try RSS image first, then fetch og:image from article page
+        let imageUrl = extractImageUrl(item)
+        if (!imageUrl && item.link) {
+          imageUrl = await fetchOgImage(item.link)
+        }
+
         const { error } = await supabase.from("articles").insert({
           title: item.title,
           slug,
           content,
           excerpt,
-          cover_image_url: extractImageUrl(item),
+          cover_image_url: imageUrl,
           source_url: item.link,
           source_name: source.name,
           is_ai_curated: false,
