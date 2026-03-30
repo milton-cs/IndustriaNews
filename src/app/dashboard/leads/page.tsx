@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 
 export default async function LeadsPage() {
@@ -6,7 +7,9 @@ export default async function LeadsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
 
-  const { data: profile } = await supabase
+  const admin = createAdminClient()
+
+  const { data: profile } = await admin
     .from("profiles")
     .select("advertiser_id")
     .eq("id", user.id)
@@ -15,7 +18,7 @@ export default async function LeadsPage() {
   let leads: any[] = []
 
   if (profile?.advertiser_id) {
-    const { data: events } = await supabase
+    const { data: events } = await admin
       .from("tracking_events")
       .select("reader_id, event_type, created_at, metadata, readers(id, name, email, phone, company, position, lead_score)")
       .eq("advertiser_id", profile.advertiser_id)

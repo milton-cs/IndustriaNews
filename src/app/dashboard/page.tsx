@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import { PerformanceChart } from "@/components/dashboard/performance-chart"
 
@@ -48,7 +49,9 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
 
-  const { data: profile } = await supabase
+  const admin = createAdminClient()
+
+  const { data: profile } = await admin
     .from("profiles")
     .select("advertiser_id")
     .eq("id", user.id)
@@ -60,8 +63,8 @@ export default async function DashboardPage() {
   let advertiser = null
 
   if (advertiserId) {
-    metrics = await getAdvertiserMetrics(supabase, advertiserId)
-    const { data } = await supabase
+    metrics = await getAdvertiserMetrics(admin, advertiserId)
+    const { data } = await admin
       .from("advertisers")
       .select("company_name, plan, contract_end")
       .eq("id", advertiserId)
