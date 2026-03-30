@@ -81,7 +81,7 @@ export function PdfViewer({ pdfUrl, title }: { pdfUrl: string; title: string }) 
     const h = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") goNext()
       if (e.key === "ArrowLeft") goPrev()
-      if (e.key === "+" || e.key === "=") setZoom(z => Math.min(z + 0.25, 2))
+      if (e.key === "+" || e.key === "=") setZoom(z => Math.min(z + 0.25, 3))
       if (e.key === "-") setZoom(z => Math.max(z - 0.25, 0.5))
       if (e.key === "f" || e.key === "F") toggleFullscreen()
     }
@@ -156,7 +156,7 @@ export function PdfViewer({ pdfUrl, title }: { pdfUrl: string; title: string }) 
           <button onClick={() => setZoom(1)} className={`text-xs font-headline min-w-[3rem] text-center py-1 rounded-lg transition-colors ${fs ? "text-gray-400 hover:bg-gray-700" : "text-gray-500 hover:bg-gray-100"}`}>
             {Math.round(zoom * 100)}%
           </button>
-          <button onClick={() => setZoom(z => Math.min(z + 0.25, 2))} className={btnClass} title="Ampliar">+</button>
+          <button onClick={() => setZoom(z => Math.min(z + 0.25, 3))} className={btnClass} title="Ampliar">+</button>
         </div>
 
         <div className="flex items-center gap-0.5">
