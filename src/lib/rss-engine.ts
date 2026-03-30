@@ -10,21 +10,57 @@ const parser = new Parser({
   },
 })
 
+function isValidArticleImage(url: string): boolean {
+  if (!url) return false
+  const lower = url.toLowerCase()
+  // Reject banners, GIFs, tiny images, ad images
+  if (lower.endsWith('.gif')) return false
+  if (lower.includes('banner')) return false
+  if (lower.includes('anuncio')) return false
+  if (lower.includes('sponsor')) return false
+  if (lower.includes('ad-')) return false
+  if (lower.includes('logo')) return false
+  if (lower.includes('icon')) return false
+  if (lower.includes('pixel')) return false
+  if (lower.includes('tracking')) return false
+  // Reject tiny dimension patterns (e.g. 700x110, 300x50)
+  const dimMatch = lower.match(/(\d+)x(\d+)/)
+  if (dimMatch) {
+    const w = parseInt(dimMatch[1])
+    const h = parseInt(dimMatch[2])
+    if (h < 200 || w / h > 4) return false // too short or too wide = banner
+  }
+  return true
+}
+
 function extractImageUrl(item: any): string | null {
-  // 1. enclosure
-  if (item.enclosure?.url) return item.enclosure.url
+  const candidates: string[] = []
+
+  // 1. All <img> from content:encoded (most reliable for article images)
+  const html = item['content:encoded'] || item.content || ''
+  const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*/gi
+  let match
+  while ((match = imgRegex.exec(html)) !== null) {
+    candidates.push(match[1])
+  }
 
   // 2. media:content
   const media = item['media:content']
   if (media) {
-    if (Array.isArray(media) && media[0]?.$?.url) return media[0].$.url
-    if (media.$?.url) return media.$.url
+    if (Array.isArray(media)) {
+      media.forEach((m: any) => { if (m.$?.url) candidates.push(m.$.url) })
+    } else if (media.$?.url) {
+      candidates.push(media.$.url)
+    }
   }
 
-  // 3. Extract <img> from content
-  const html = item['content:encoded'] || item.content || ''
-  const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/)
-  if (imgMatch?.[1]) return imgMatch[1]
+  // 3. enclosure (often just the first image, sometimes a banner)
+  if (item.enclosure?.url) candidates.push(item.enclosure.url)
+
+  // Return first valid image (not a banner/gif/tiny)
+  for (const url of candidates) {
+    if (isValidArticleImage(url)) return url
+  }
 
   return null
 }
