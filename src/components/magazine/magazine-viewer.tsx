@@ -43,7 +43,7 @@ export function MagazineViewer({ pages, edition }: { pages: MagazinePage[]; edit
     return () => window.removeEventListener("keydown", handleKey)
   }, [current, goTo])
 
-  if (!page) return <p className="text-gray-400 text-center py-16">Sem conteudo.</p>
+  if (!page) return <p className="text-gray-400 text-center py-16">Sem conteúdo.</p>
 
   return (
     <div>
@@ -57,21 +57,21 @@ export function MagazineViewer({ pages, edition }: { pages: MagazinePage[]; edit
           ← Anterior
         </button>
         <span className="text-sm text-gray-500 font-headline">
-          Pagina {current + 1} de {total}
+          Página {current + 1} de {total}
         </span>
         <button
           onClick={() => goTo(current + 1)}
           disabled={current === total - 1}
           className="px-4 py-2 text-sm font-headline uppercase bg-white border border-gray-200 rounded-lg hover:bg-brand-lavanda hover:text-white hover:border-brand-lavanda transition-all disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-gray-400 disabled:hover:border-gray-200"
         >
-          Proxima →
+          Próxima →
         </button>
       </div>
 
       {/* Page content */}
       <div className={`transition-opacity duration-200 ${fade ? "opacity-100" : "opacity-0"}`}>
         {page.image_url && (
-          <img src={page.image_url} alt={`Pagina ${page.page_number}`} className="w-full rounded-xl shadow-lg mb-8" />
+          <img src={page.image_url} alt={`Página ${page.page_number}`} className="w-full rounded-xl shadow-lg mb-8" />
         )}
         {page.content && (
           <div className="prose prose-lg max-w-none leading-relaxed">
@@ -108,7 +108,7 @@ export function MagazineViewer({ pages, edition }: { pages: MagazinePage[]; edit
           disabled={current === total - 1}
           className="px-4 py-2 text-sm font-headline uppercase bg-white border border-gray-200 rounded-lg hover:bg-brand-lavanda hover:text-white hover:border-brand-lavanda transition-all disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-gray-400 disabled:hover:border-gray-200"
         >
-          Proxima →
+          Próxima →
         </button>
       </div>
     </div>

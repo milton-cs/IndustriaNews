@@ -81,7 +81,7 @@ export default async function HomePage() {
       {/* All News with Load More */}
       <section className="mt-4">
         <h2 className="font-headline text-xl font-bold mb-6 border-b-2 border-brand-lavanda pb-2 inline-block">
-          TODAS AS NOTICIAS
+          TODAS AS NOTÍCIAS
         </h2>
         <LoadMoreGrid initialArticles={latest} initialOffset={13} />
       </section>

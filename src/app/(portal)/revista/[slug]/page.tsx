@@ -37,7 +37,7 @@ export default async function MagazineEditionPage({ params }: Props) {
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="text-center mb-10">
         <span className="text-brand-lavanda font-headline text-sm uppercase tracking-wide">
-          Edicao {edition.edition_number} · {edition.month && edition.year
+          Edição {edition.edition_number} · {edition.month && edition.year
             ? new Date(edition.year, edition.month - 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
             : ""}
         </span>
@@ -46,7 +46,7 @@ export default async function MagazineEditionPage({ params }: Props) {
 
       {(!pages || pages.length === 0) ? (
         <div className="text-center py-16">
-          <p className="text-gray-400">Conteudo em preparacao.</p>
+          <p className="text-gray-400">Conteúdo em preparação.</p>
         </div>
       ) : (
         <MagazineViewer pages={pages} edition={edition} />
