@@ -2,22 +2,23 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-50 bg-brand-offwhite/95 backdrop-blur-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex flex-col leading-none">
-            <span className="font-headline text-xl sm:text-2xl font-bold text-brand-lavanda tracking-tighter">
-              IND&Uacute;STRIA
-            </span>
-            <span className="font-headline text-2xl sm:text-3xl font-black text-brand-black tracking-tighter -mt-1">
-              NEWS
-            </span>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <Link href="/" className="shrink-0">
+          <Image
+            src="/logo-positiva.png"
+            alt="Indústria News"
+            width={120}
+            height={60}
+            className="h-12 sm:h-14 w-auto"
+            priority
+          />
         </Link>
 
         {/* Desktop nav */}

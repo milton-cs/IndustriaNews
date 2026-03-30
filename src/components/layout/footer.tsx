@@ -1,13 +1,18 @@
+import Image from "next/image"
+
 export function Footer() {
   return (
     <footer className="bg-brand-black text-white mt-16">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="flex flex-col md:flex-row justify-between gap-8">
           <div>
-            <div className="flex flex-col leading-none mb-4">
-              <span className="font-headline text-xl font-bold text-brand-lavanda">INDÚSTRIA</span>
-              <span className="font-headline text-2xl font-black -mt-1">NEWS</span>
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Indústria News"
+              width={100}
+              height={50}
+              className="h-12 w-auto mb-4 brightness-200"
+            />
             <p className="text-gray-400 text-sm max-w-xs">
               O portal de notícias e inteligência para o setor industrial brasileiro.
             </p>
