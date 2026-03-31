@@ -26,11 +26,14 @@ export function Header() {
           <Link href="/revista" className="font-headline text-sm uppercase tracking-wide px-4 py-2 bg-brand-lavanda/10 text-brand-lavanda border border-brand-lavanda/30 rounded-lg hover:bg-brand-lavanda hover:text-white transition-all">
             Revista
           </Link>
+          <Link href="/planos" className="font-headline text-sm uppercase tracking-wide text-gray-600 hover:text-brand-lavanda transition-colors">
+            Planos
+          </Link>
           <Link href="/sobre" className="font-headline text-sm uppercase tracking-wide text-gray-600 hover:text-brand-lavanda transition-colors">
             Sobre
           </Link>
           <Link href="/login" className="font-headline text-xs uppercase tracking-wide px-4 py-2 bg-brand-lavanda text-white rounded-lg hover:bg-brand-lavanda-dark transition-colors">
-            &Aacute;rea do Anunciante
+            Área do Anunciante
           </Link>
         </nav>
 
@@ -52,11 +55,14 @@ export function Header() {
           <Link href="/revista" onClick={() => setMenuOpen(false)} className="block font-headline text-sm uppercase tracking-wide text-brand-lavanda border border-brand-lavanda/30 rounded-lg px-4 py-2 text-center hover:bg-brand-lavanda hover:text-white transition-all">
             Revista
           </Link>
+          <Link href="/planos" onClick={() => setMenuOpen(false)} className="block font-headline text-sm uppercase tracking-wide text-gray-600 hover:text-brand-lavanda py-2">
+            Planos
+          </Link>
           <Link href="/sobre" onClick={() => setMenuOpen(false)} className="block font-headline text-sm uppercase tracking-wide text-gray-600 hover:text-brand-lavanda py-2">
             Sobre
           </Link>
           <Link href="/login" onClick={() => setMenuOpen(false)} className="block font-headline text-sm uppercase tracking-wide text-center px-4 py-3 bg-brand-lavanda text-white rounded-lg">
-            &Aacute;rea do Anunciante
+            Área do Anunciante
           </Link>
         </nav>
       )}
