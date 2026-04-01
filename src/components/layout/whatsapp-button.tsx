@@ -1,4 +1,4 @@
-const WHATSAPP_NUMBER = "5500000000000" // Substitua pelo número real: 55 + DDD + número
+const WHATSAPP_NUMBER = "5511919850127"
 const WHATSAPP_MESSAGE = "Olá! Vim pelo Indústria News e gostaria de mais informações."
 
 export function WhatsAppButton() {

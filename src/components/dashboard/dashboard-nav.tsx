@@ -14,6 +14,7 @@ const adminLinks = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/artigos", label: "Artigos" },
   { href: "/admin/revista", label: "Revista" },
+  { href: "/admin/leitores", label: "Leitores" },
   { href: "/admin/anunciantes", label: "Anunciantes" },
   { href: "/admin/contratos", label: "Contratos" },
   { href: "/admin/planos", label: "Planos" },
