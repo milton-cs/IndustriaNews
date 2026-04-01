@@ -11,6 +11,8 @@ export default function NovoArtigoPage() {
   const [categoryId, setCategoryId] = useState("")
   const [status, setStatus] = useState("draft")
   const [coverImageUrl, setCoverImageUrl] = useState("")
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
   const [categories, setCategories] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
   const router = useRouter()
@@ -26,9 +28,28 @@ export default function NovoArtigoPage() {
     text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").substring(0, 200)
 
+  const handleUploadImage = async (file: File) => {
+    setUploading(true)
+    const ext = file.name.split(".").pop() || "jpg"
+    const path = `artigos/${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from("revistas").upload(path, file, { contentType: file.type, upsert: true })
+    if (!error) {
+      const { data } = supabase.storage.from("revistas").getPublicUrl(path)
+      setCoverImageUrl(data.publicUrl)
+    } else {
+      alert("Erro no upload: " + error.message)
+    }
+    setUploading(false)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
+
+    // Upload image file if selected
+    if (coverFile && !coverImageUrl) {
+      await handleUploadImage(coverFile)
+    }
 
     const slug = slugify(title) + "-" + Date.now().toString(36)
 
@@ -82,17 +103,40 @@ export default function NovoArtigoPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-headline uppercase text-gray-400 mb-2">Imagem de Capa (URL)</label>
-          <input
-            value={coverImageUrl}
-            onChange={(e) => setCoverImageUrl(e.target.value)}
-            type="url"
-            className="w-full px-4 py-3 bg-brand-grafite-light border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand-lavanda/50"
-            placeholder="https://..."
-          />
-          {coverImageUrl && (
-            <img src={coverImageUrl} alt="Preview" className="mt-2 h-32 w-full object-cover rounded-lg opacity-80" />
-          )}
+          <label className="block text-sm font-headline uppercase text-gray-400 mb-2">Imagem de Capa</label>
+          <div className="space-y-3">
+            {/* Upload de arquivo */}
+            <div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    setCoverFile(file)
+                    handleUploadImage(file)
+                  }
+                }}
+                className="w-full px-4 py-3 bg-brand-grafite-light border border-white/10 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-brand-lavanda file:text-white file:font-headline file:uppercase file:text-xs file:cursor-pointer"
+              />
+              {uploading && <p className="text-xs text-brand-lavanda mt-1">Enviando imagem...</p>}
+            </div>
+            {/* Ou colar URL */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">ou cole uma URL:</span>
+              <input
+                value={coverImageUrl}
+                onChange={(e) => setCoverImageUrl(e.target.value)}
+                type="url"
+                className="flex-1 px-3 py-2 bg-brand-grafite-light border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-lavanda/50"
+                placeholder="https://..."
+              />
+            </div>
+            {/* Preview */}
+            {coverImageUrl && (
+              <img src={coverImageUrl} alt="Preview" className="h-40 w-full object-cover rounded-lg border border-white/10" />
+            )}
+          </div>
         </div>
 
         <div>
