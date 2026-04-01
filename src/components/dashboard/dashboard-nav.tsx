@@ -13,6 +13,7 @@ const advertiserLinks = [
 const adminLinks = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/artigos", label: "Artigos" },
+  { href: "/admin/revista", label: "Revista" },
   { href: "/admin/anunciantes", label: "Anunciantes" },
   { href: "/admin/contratos", label: "Contratos" },
   { href: "/admin/categorias", label: "Categorias" },
