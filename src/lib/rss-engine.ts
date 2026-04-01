@@ -144,7 +144,7 @@ async function fetchOgImage(articleUrl: string): Promise<string | null> {
   }
 }
 
-const RSS_SOURCES = [
+export const RSS_SOURCES = [
   // Fontes originais
   { url: "https://noticias.portaldaindustria.com.br/rss", name: "Portal da Indústria" },
   { url: "https://industriasa.com.br/feed/", name: "Indústria SA" },
