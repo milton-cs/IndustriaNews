@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   },
   description: "O portal de notícias e inteligência para o setor industrial brasileiro.",
   metadataBase: new URL("https://industrianews.com"),
+  verification: {
+    google: "ChwtM5eVhSUTmGGshJF09329Lc1gm8icezuucELUVWw",
+  },
   openGraph: {
     siteName: "Indústria News",
     locale: "pt_BR",

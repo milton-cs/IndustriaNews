@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
   const response = NextResponse.json({ ok: true, readerId: reader.id })
   response.cookies.set("reader_id", reader.id, {
-    httpOnly: true,
+    httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 365 * 24 * 60 * 60,
