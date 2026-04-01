@@ -30,14 +30,18 @@ export default function NovoArtigoPage() {
 
   const handleUploadImage = async (file: File) => {
     setUploading(true)
-    const ext = file.name.split(".").pop() || "jpg"
-    const path = `artigos/${Date.now()}.${ext}`
-    const { error } = await supabase.storage.from("revistas").upload(path, file, { contentType: file.type, upsert: true })
-    if (!error) {
-      const { data } = supabase.storage.from("revistas").getPublicUrl(path)
-      setCoverImageUrl(data.publicUrl)
-    } else {
-      alert("Erro no upload: " + error.message)
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      const res = await fetch("/api/admin/upload-image", { method: "POST", body: fd })
+      const data = await res.json()
+      if (!res.ok) {
+        alert("Erro no upload: " + (data.error || "Falha desconhecida"))
+      } else {
+        setCoverImageUrl(data.url)
+      }
+    } catch {
+      alert("Erro de conexão ao enviar imagem")
     }
     setUploading(false)
   }
