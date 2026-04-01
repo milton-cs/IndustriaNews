@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import Link from "next/link"
 
 export default async function ContratosAdminPage() {
   const supabase = await createClient()
@@ -21,11 +22,12 @@ export default async function ContratosAdminPage() {
               <th className="text-left px-4 py-3 text-xs font-headline uppercase tracking-wide text-gray-400">Valor</th>
               <th className="text-left px-4 py-3 text-xs font-headline uppercase tracking-wide text-gray-400">Status</th>
               <th className="text-left px-4 py-3 text-xs font-headline uppercase tracking-wide text-gray-400">Expira</th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
             {(!contracts || contracts.length === 0) ? (
-              <tr><td colSpan={5} className="px-4 py-12 text-center text-gray-500">Nenhum contrato registrado.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-12 text-center text-gray-500">Nenhum contrato registrado.</td></tr>
             ) : (
               contracts.map((c: any) => {
                 const adv = Array.isArray(c.advertisers) ? c.advertisers[0] : c.advertisers
@@ -39,6 +41,11 @@ export default async function ContratosAdminPage() {
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-500">
                       {c.expires_at ? new Date(c.expires_at).toLocaleDateString("pt-BR") : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link href={`/admin/contratos/${c.id}`} className="text-xs text-brand-lavanda hover:text-brand-lavanda-light font-headline uppercase">
+                        Editar
+                      </Link>
                     </td>
                   </tr>
                 )

@@ -168,6 +168,17 @@ const RSS_SOURCES = [
   { url: "https://www.abicalcados.com.br/conteudo/noticias/feed/", name: "Abicalçados" },
   { url: "https://www.acobrasil.org.br/site/noticias/feed/", name: "Aço Brasil" },
   { url: "https://ibram.org.br/noticias/feed/", name: "IBRAM" },
+  // Novas fontes
+  { url: "https://agenciasebrae.com.br/siga-nosso-feed-rss/", name: "Agência Sebrae" },
+  { url: "https://agenciadenoticias.bndes.gov.br/industria", name: "BNDES" },
+  { url: "https://br.investing.com/rss/news_356.rss", name: "Investing.com - Commodities" },
+  { url: "https://br.investing.com/rss/news_14.rss", name: "Investing.com - Economia" },
+  { url: "https://amanha.com.br/categoria/500-maiores-do-sul?format=feed&type=rss", name: "Amanhã - 500 Maiores do Sul" },
+  { url: "https://amanha.com.br/categoria/industria?format=feed&type=rss", name: "Amanhã - Indústria" },
+  { url: "https://amanha.com.br/categoria/negocios-do-sul1?format=feed&type=rss", name: "Amanhã - Negócios do Sul" },
+  { url: "https://admin.cnnbrasil.com.br/feed/", name: "CNN Brasil (feed)" },
+  { url: "https://agenciabrasil.ebc.com.br/rss/economia/feed.xml", name: "Agência Brasil - Economia" },
+  { url: "https://valor.globo.com/rss/valor", name: "Valor Econômico (geral)" },
 ]
 
 // Fallback images by keyword (Unsplash, free, high-quality)

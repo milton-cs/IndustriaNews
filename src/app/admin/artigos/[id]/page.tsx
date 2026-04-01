@@ -12,6 +12,7 @@ export default function EditArtigoPage({ params }: { params: Promise<{ id: strin
   const [excerpt, setExcerpt] = useState("")
   const [categoryId, setCategoryId] = useState("")
   const [status, setStatus] = useState("draft")
+  const [coverImageUrl, setCoverImageUrl] = useState("")
   const [categories, setCategories] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -29,6 +30,7 @@ export default function EditArtigoPage({ params }: { params: Promise<{ id: strin
         setExcerpt(articleRes.data.excerpt || "")
         setCategoryId(articleRes.data.category_id || "")
         setStatus(articleRes.data.status)
+        setCoverImageUrl(articleRes.data.cover_image_url || "")
       }
       setCategories(catRes.data || [])
       setLoading(false)
@@ -45,6 +47,7 @@ export default function EditArtigoPage({ params }: { params: Promise<{ id: strin
       excerpt: excerpt || content.substring(0, 200),
       category_id: categoryId || null,
       status,
+      cover_image_url: coverImageUrl || null,
       published_at: status === "published" ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     }).eq("id", id)
@@ -87,6 +90,15 @@ export default function EditArtigoPage({ params }: { params: Promise<{ id: strin
             <option value="">Sem categoria</option>
             {categories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
           </select>
+        </div>
+        <div>
+          <label className="block text-sm font-headline uppercase text-gray-400 mb-2">Imagem de Capa (URL)</label>
+          <input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} type="url"
+            className="w-full px-4 py-3 bg-brand-grafite-light border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand-lavanda/50"
+            placeholder="https://..." />
+          {coverImageUrl && (
+            <img src={coverImageUrl} alt="Preview" className="mt-2 h-32 w-full object-cover rounded-lg opacity-80" />
+          )}
         </div>
         <div>
           <label className="block text-sm font-headline uppercase text-gray-400 mb-2">Resumo</label>

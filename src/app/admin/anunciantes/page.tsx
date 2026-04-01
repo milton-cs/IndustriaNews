@@ -36,6 +36,7 @@ export default async function AnunciantesAdminPage() {
               <th className="text-left px-4 py-3 text-xs font-headline uppercase tracking-wide text-gray-400">Plano</th>
               <th className="text-left px-4 py-3 text-xs font-headline uppercase tracking-wide text-gray-400">Status</th>
               <th className="text-left px-4 py-3 text-xs font-headline uppercase tracking-wide text-gray-400">Contrato até</th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
@@ -58,6 +59,11 @@ export default async function AnunciantesAdminPage() {
                 </td>
                 <td className="px-4 py-3 text-xs text-gray-500">
                   {adv.contract_end ? new Date(adv.contract_end).toLocaleDateString("pt-BR") : "—"}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <Link href={`/admin/anunciantes/${adv.id}`} className="text-xs text-brand-lavanda hover:text-brand-lavanda-light font-headline uppercase">
+                    Editar
+                  </Link>
                 </td>
               </tr>
             ))}
