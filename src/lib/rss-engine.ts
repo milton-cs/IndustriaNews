@@ -145,6 +145,7 @@ async function fetchOgImage(articleUrl: string): Promise<string | null> {
 }
 
 const RSS_SOURCES = [
+  // Fontes originais
   { url: "https://noticias.portaldaindustria.com.br/rss", name: "Portal da Indústria" },
   { url: "https://industriasa.com.br/feed/", name: "Indústria SA" },
   { url: "https://gironews.com/feed/", name: "Giro News" },
@@ -152,6 +153,21 @@ const RSS_SOURCES = [
   { url: "https://tissueonline.com.br/feed/", name: "Tissue Online" },
   { url: "https://revistamineracao.com.br/feed/", name: "Revista Mineração" },
   { url: "https://www.fiesp.com.br/feed/", name: "FIESP" },
+  // Grandes portais
+  { url: "https://valor.globo.com/tudo-sobre/setor/industria-setor-industrial/rss", name: "Valor Econômico" },
+  { url: "https://www.cnnbrasil.com.br/tudo-sobre/industria/feed/", name: "CNN Brasil" },
+  { url: "https://exame.com/noticias-sobre/industria/feed/", name: "Exame" },
+  { url: "https://veja.abril.com.br/noticias-sobre/industria/feed/", name: "Veja" },
+  // Confederações e Associações
+  { url: "https://cni.portaldaindustria.com.br/rss", name: "CNI" },
+  { url: "https://www.abinee.org.br/noticias/todas/feed/", name: "ABINEE" },
+  { url: "https://abia.org.br/noticias/feed/", name: "ABIA" },
+  { url: "https://abiquim.org.br/comunicacao/noticias/feed/", name: "ABIQUIM" },
+  { url: "https://www.interfarma.org.br/noticias/feed/", name: "Interfarma" },
+  { url: "https://www.abit.org.br/noticias/feed/", name: "ABIT" },
+  { url: "https://www.abicalcados.com.br/conteudo/noticias/feed/", name: "Abicalçados" },
+  { url: "https://www.acobrasil.org.br/site/noticias/feed/", name: "Aço Brasil" },
+  { url: "https://ibram.org.br/noticias/feed/", name: "IBRAM" },
 ]
 
 // Fallback images by keyword (Unsplash, free, high-quality)
