@@ -155,7 +155,6 @@ export const RSS_SOURCES = [
   { url: "https://www.fiesp.com.br/feed/", name: "FIESP" },
   // Grandes portais
   { url: "https://valor.globo.com/tudo-sobre/setor/industria-setor-industrial/rss", name: "Valor Econômico" },
-  { url: "https://www.cnnbrasil.com.br/tudo-sobre/industria/feed/", name: "CNN Brasil" },
   { url: "https://exame.com/noticias-sobre/industria/feed/", name: "Exame" },
   { url: "https://veja.abril.com.br/noticias-sobre/industria/feed/", name: "Veja" },
   // Confederações e Associações
@@ -176,7 +175,6 @@ export const RSS_SOURCES = [
   { url: "https://amanha.com.br/categoria/500-maiores-do-sul?format=feed&type=rss", name: "Amanhã - 500 Maiores do Sul" },
   { url: "https://amanha.com.br/categoria/industria?format=feed&type=rss", name: "Amanhã - Indústria" },
   { url: "https://amanha.com.br/categoria/negocios-do-sul1?format=feed&type=rss", name: "Amanhã - Negócios do Sul" },
-  { url: "https://admin.cnnbrasil.com.br/feed/", name: "CNN Brasil (feed)" },
   { url: "https://agenciabrasil.ebc.com.br/rss/economia/feed.xml", name: "Agência Brasil - Economia" },
   { url: "https://valor.globo.com/rss/valor", name: "Valor Econômico (geral)" },
 ]
