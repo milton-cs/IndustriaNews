@@ -35,23 +35,27 @@ async function aiCurate(title: string, excerpt: string): Promise<{ seoTitle: str
       max_tokens: 200,
       messages: [{
         role: "user",
-        content: `Você é um editor do portal Indústria News. Dado este artigo:
+        content: `Você é um editor do portal Indústria News, focado EXCLUSIVAMENTE no setor industrial brasileiro.
 
+Dado este artigo:
 Título: ${title}
 Resumo: ${excerpt.substring(0, 300)}
 
 Faça:
-1. Reescreva o título para SEO (máximo 80 caracteres, direto, informativo, em português do Brasil)
-2. Classifique em UMA destas categorias: ${categorySlugs}
+1. Avalie se o artigo é relevante para o setor industrial (manufatura, commodities, energia, infraestrutura, mineração, agronegócio industrial, tecnologia industrial, logística, negócios B2B, economia industrial). Se NÃO for relevante (ex: esportes, política partidária, entretenimento, saúde pessoal, literatura, celebridades), responda APENAS: {"relevant": false}
+2. Se for relevante, reescreva o título para SEO (máximo 80 caracteres, direto, informativo, em português do Brasil)
+3. Classifique em UMA destas categorias: ${categorySlugs}
 
 Responda EXATAMENTE neste formato JSON:
-{"seoTitle": "título reescrito", "categorySlug": "slug-da-categoria"}`
+Se relevante: {"relevant": true, "seoTitle": "título reescrito", "categorySlug": "slug-da-categoria"}
+Se irrelevante: {"relevant": false}`
       }],
     })
     const text = msg.content[0].type === "text" ? msg.content[0].text : ""
     const jsonMatch = text.match(/\{[^}]+\}/)
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0])
+      if (parsed.relevant === false) return null
       if (parsed.seoTitle && parsed.categorySlug) return parsed
     }
     return null
@@ -82,6 +86,10 @@ function isValidArticleImage(url: string): boolean {
   if (lower.includes('icon')) return false
   if (lower.includes('pixel')) return false
   if (lower.includes('tracking')) return false
+  if (lower.includes('fb_marca')) return false
+  if (lower.includes('placeholder')) return false
+  if (lower.includes('og-image-default')) return false
+  if (lower.includes('default-share')) return false
   // Reject tiny dimension patterns (e.g. 700x110, 300x50)
   const dimMatch = lower.match(/(\d+)x(\d+)/)
   if (dimMatch) {
@@ -176,7 +184,6 @@ export const RSS_SOURCES = [
   { url: "https://amanha.com.br/categoria/industria?format=feed&type=rss", name: "Amanhã - Indústria" },
   { url: "https://amanha.com.br/categoria/negocios-do-sul1?format=feed&type=rss", name: "Amanhã - Negócios do Sul" },
   { url: "https://agenciabrasil.ebc.com.br/rss/economia/feed.xml", name: "Agência Brasil - Economia" },
-  { url: "https://valor.globo.com/rss/valor", name: "Valor Econômico (geral)" },
 ]
 
 // Fallback images by keyword (Unsplash, free, high-quality)
@@ -269,21 +276,20 @@ export async function fetchAndStoreArticles(): Promise<{ imported: number; error
           imageUrl = imageUrl.replace('http://', 'https://')
         }
 
-        // AI curation: rewrite title for SEO + classify category
+        // AI curation: filter relevance + rewrite title for SEO + classify category
         const aiResult = await aiCurate(item.title, excerpt)
-        let categoryId: string | null = null
-        let seoTitle: string | null = null
+        if (!aiResult) continue // AI rejected as irrelevant or failed — skip article
 
-        if (aiResult) {
-          seoTitle = aiResult.seoTitle
-          // Look up category ID by slug
-          const { data: cat } = await supabase
-            .from("categories")
-            .select("id")
-            .eq("slug", aiResult.categorySlug)
-            .single()
-          if (cat) categoryId = cat.id
-        }
+        let categoryId: string | null = null
+        const seoTitle = aiResult.seoTitle
+
+        // Look up category ID by slug
+        const { data: cat } = await supabase
+          .from("categories")
+          .select("id")
+          .eq("slug", aiResult.categorySlug)
+          .single()
+        if (cat) categoryId = cat.id
 
         const { error } = await supabase.from("articles").insert({
           title: seoTitle || item.title,
