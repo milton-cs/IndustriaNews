@@ -178,8 +178,6 @@ export const RSS_SOURCES = [
   // Novas fontes
   { url: "https://agenciasebrae.com.br/siga-nosso-feed-rss/", name: "Agência Sebrae" },
   { url: "https://agenciadenoticias.bndes.gov.br/industria", name: "BNDES" },
-  { url: "https://br.investing.com/rss/news_356.rss", name: "Investing.com - Commodities" },
-  { url: "https://br.investing.com/rss/news_14.rss", name: "Investing.com - Economia" },
   { url: "https://amanha.com.br/categoria/500-maiores-do-sul?format=feed&type=rss", name: "Amanhã - 500 Maiores do Sul" },
   { url: "https://amanha.com.br/categoria/industria?format=feed&type=rss", name: "Amanhã - Indústria" },
   { url: "https://amanha.com.br/categoria/negocios-do-sul1?format=feed&type=rss", name: "Amanhã - Negócios do Sul" },
@@ -261,6 +259,10 @@ export async function fetchAndStoreArticles(): Promise<{ imported: number; error
         // Prefer full content (content:encoded > content > contentSnippet)
         const rawContent = item["content:encoded"] || item.content || item.contentSnippet || item.title
         const content = stripHtml(rawContent)
+
+        // Skip articles with no real body (feeds that only provide title repeated as content)
+        if (content.length < 300) continue
+
         const excerpt = (item.contentSnippet || content).substring(0, 250)
 
         // Try RSS image first, then og:image, then keyword-based fallback
