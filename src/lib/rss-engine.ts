@@ -152,6 +152,48 @@ async function fetchOgImage(articleUrl: string): Promise<string | null> {
   }
 }
 
+async function fetchFullArticleContent(articleUrl: string): Promise<string | null> {
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 7000)
+    const res = await fetch(articleUrl, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; IndustriaNewsBot/1.0; +https://industrianews.com)' }
+    })
+    clearTimeout(timeout)
+    if (!res.ok) return null
+    const html = await res.text()
+
+    // Strip script/style/nav/aside/footer blocks before extraction
+    const cleaned = html
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<nav[\s\S]*?<\/nav>/gi, ' ')
+      .replace(/<aside[\s\S]*?<\/aside>/gi, ' ')
+      .replace(/<footer[\s\S]*?<\/footer>/gi, ' ')
+      .replace(/<header[\s\S]*?<\/header>/gi, ' ')
+
+    // Try semantic article containers in order of preference
+    const patterns: RegExp[] = [
+      /<article[^>]*>([\s\S]*?)<\/article>/i,
+      /<div[^>]*itemprop=["']articleBody["'][^>]*>([\s\S]*?)<\/div>\s*<\/(?:section|main|article)/i,
+      /<div[^>]*class=["'][^"']*(?:article-body|article__body|post-content|entry-content|content-text|materia-corpo|noticia-corpo|content-body)[^"']*["'][^>]*>([\s\S]*?)<\/div>\s*<\/(?:section|main|article|div)/i,
+      /<main[^>]*>([\s\S]*?)<\/main>/i,
+    ]
+
+    for (const pattern of patterns) {
+      const match = cleaned.match(pattern)
+      if (match && match[1]) {
+        const text = stripHtml(match[1])
+        if (text.length > 500) return text.substring(0, 10000)
+      }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 export const RSS_SOURCES = [
   // Fontes originais
   { url: "https://noticias.portaldaindustria.com.br/rss", name: "Portal da Indústria" },
@@ -258,7 +300,15 @@ export async function fetchAndStoreArticles(): Promise<{ imported: number; error
         const slug = slugify(item.title) + "-" + Date.now().toString(36)
         // Prefer full content (content:encoded > content > contentSnippet)
         const rawContent = item["content:encoded"] || item.content || item.contentSnippet || item.title
-        const content = stripHtml(rawContent)
+        let content = stripHtml(rawContent)
+
+        // Fallback: if RSS only gave a short snippet, fetch full article from source URL
+        if (content.length < 500 && item.link) {
+          const fullContent = await fetchFullArticleContent(item.link)
+          if (fullContent && fullContent.length > content.length) {
+            content = fullContent
+          }
+        }
 
         // Skip articles with no real body (feeds that only provide title repeated as content)
         if (content.length < 300) continue

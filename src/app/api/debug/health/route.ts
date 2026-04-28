@@ -8,6 +8,7 @@ export async function GET() {
     deployedAt: new Date().toISOString(),
     rssSources: RSS_SOURCES.map((s) => s.name),
     rssCount: RSS_SOURCES.length,
-    version: "diag-2026-04-28",
+    version: "diag-2026-04-28-v2-with-fetcher",
+    fullContentFetch: "enabled",
   })
 }
