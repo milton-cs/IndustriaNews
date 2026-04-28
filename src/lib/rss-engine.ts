@@ -26,8 +26,79 @@ const CATEGORIES_MAP: Record<string, string> = {
   "defesa-e-aeroespacial": "Defesa e Aeroespacial",
 }
 
-async function aiCurate(title: string, excerpt: string): Promise<{ seoTitle: string; categorySlug: string } | null> {
-  if (!anthropic) return null
+type AiCurateResult =
+  | { kind: "ok"; seoTitle: string; categorySlug: string }
+  | { kind: "irrelevant" }
+  | { kind: "error" }
+
+// Keywords for fallback relevance check when AI is unavailable
+const IRRELEVANT_KEYWORDS = [
+  "futebol", "novela", "celebridade", "celebridades", "BBB", "Big Brother",
+  "fofoca", "famosos", "instagram da", "instagram do", "horoscopo", "horóscopo",
+  "globoplay", "netflix", "amazon prime", "campeonato brasileiro", "libertadores",
+  "copa do brasil", "supercopa", "final do brasileirão", "olimpiadas", "olimpíadas",
+  "cantor ", "cantora ", "ator ", "atriz ", "casamento de", "morte de",
+  "homicídio", "assassinato", "estuprador", "ostomizadas",
+]
+
+const RELEVANT_KEYWORDS = [
+  "indústria", "industrial", "manufatura", "fabrica", "fábrica", "fabricação",
+  "mineração", "mineradora", "siderurgia", "metalurgia", "petróleo", "gás",
+  "energia", "renovável", "solar", "eólica", "hidrelétrica", "infraestrutura",
+  "construção civil", "obra", "logística", "transporte de cargas", "porto",
+  "ferrovia", "rodovia", "agronegócio", "commodities", "exportação",
+  "importação", "química", "petroquímica", "automotiv", "embraer", "aeroespacial",
+  "defesa", "tecnologia industrial", "automação", "robótica", "indústria 4.0",
+  "ESG", "sustentabilidade industrial", "saneamento", "celulose", "papel",
+  "têxtil", "confecção", "alimentos", "bebidas industrializadas", "farmacêutica",
+  "máquinas", "equipamentos industriais", "FIESP", "CNI", "BNDES",
+  "investimento industrial", "PIB industrial", "produção industrial",
+]
+
+// Maps keywords to category slugs for fallback categorization
+const CATEGORY_KEYWORDS: { slug: string; keywords: string[] }[] = [
+  { slug: "automotivo", keywords: ["automotiv", "carro", "veículo", "veiculo", "embraer", "fiat", "volkswagen", "toyota", "honda"] },
+  { slug: "mineracao", keywords: ["mineração", "mineracao", "mineradora", "minério", "minerio", "vale s.a.", "ibram"] },
+  { slug: "petroleo-e-gas", keywords: ["petróleo", "petroleo", "gás natural", "gas natural", "petrobras", "petroquím", "petroquim", "refinaria"] },
+  { slug: "energia-eletrica", keywords: ["energia elétrica", "energia eletrica", "eletrobras", "eólica", "eolica", "solar", "hidrelétrica", "hidreletrica"] },
+  { slug: "metalurgia-e-siderurgia", keywords: ["siderurgia", "metalurgia", "aço", "ferro", "csn", "usiminas", "gerdau"] },
+  { slug: "alimentos-e-bebidas", keywords: ["alimento", "bebida", "ambev", "jbs", "brf", "minerva", "marfrig"] },
+  { slug: "farmaceutica-e-cosmeticos", keywords: ["farmacêutica", "farmaceutica", "medicamento", "vacina", "interfarma", "cosmético", "cosmetico"] },
+  { slug: "papel-e-celulose", keywords: ["celulose", "papel", "tissue", "suzano", "klabin"] },
+  { slug: "textil-e-confeccao", keywords: ["têxtil", "textil", "confecção", "confeccao", "moda industrial"] },
+  { slug: "quimica-e-petroquimica", keywords: ["química", "quimica", "petroquímica", "petroquimica", "abiquim", "braskem"] },
+  { slug: "maquinas-e-equipamentos", keywords: ["máquinas", "maquinas", "equipamento industrial", "weg"] },
+  { slug: "infraestrutura", keywords: ["infraestrutura", "rodovia", "ferrovia", "porto", "saneamento básico"] },
+  { slug: "edificacoes", keywords: ["edificação", "edificacao", "construção civil", "construcao civil", "obra civil"] },
+  { slug: "industria-4-0", keywords: ["indústria 4.0", "industria 4.0", "automação", "automacao", "robótica", "robotica", "iot industrial", "ia industrial"] },
+  { slug: "esg-e-sustentabilidade", keywords: ["esg", "sustentabilidade", "carbono", "emissões", "emissoes", "amazônia industrial"] },
+  { slug: "saneamento-e-residuos", keywords: ["saneamento", "resíduo", "residuo", "tratamento de água", "tratamento de agua"] },
+  { slug: "defesa-e-aeroespacial", keywords: ["defesa", "aeroespacial", "embraer", "satélite", "satelite"] },
+]
+
+function keywordRelevanceCheck(title: string, excerpt: string): "relevant" | "irrelevant" | "unknown" {
+  const text = (title + " " + excerpt).toLowerCase()
+  for (const kw of IRRELEVANT_KEYWORDS) {
+    if (text.includes(kw.toLowerCase())) return "irrelevant"
+  }
+  for (const kw of RELEVANT_KEYWORDS) {
+    if (text.includes(kw.toLowerCase())) return "relevant"
+  }
+  return "unknown"
+}
+
+function keywordCategorize(title: string, excerpt: string): string | null {
+  const text = (title + " " + excerpt).toLowerCase()
+  for (const cat of CATEGORY_KEYWORDS) {
+    for (const kw of cat.keywords) {
+      if (text.includes(kw.toLowerCase())) return cat.slug
+    }
+  }
+  return null
+}
+
+async function aiCurate(title: string, excerpt: string): Promise<AiCurateResult> {
+  if (!anthropic) return { kind: "error" }
   try {
     const categorySlugs = Object.keys(CATEGORIES_MAP).join(", ")
     const msg = await anthropic.messages.create({
@@ -52,15 +123,17 @@ Se irrelevante: {"relevant": false}`
       }],
     })
     const text = msg.content[0].type === "text" ? msg.content[0].text : ""
-    const jsonMatch = text.match(/\{[^}]+\}/)
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0])
-      if (parsed.relevant === false) return null
-      if (parsed.seoTitle && parsed.categorySlug) return parsed
+      if (parsed.relevant === false) return { kind: "irrelevant" }
+      if (parsed.seoTitle && parsed.categorySlug) {
+        return { kind: "ok", seoTitle: parsed.seoTitle, categorySlug: parsed.categorySlug }
+      }
     }
-    return null
+    return { kind: "error" }
   } catch {
-    return null
+    return { kind: "error" }
   }
 }
 
@@ -330,18 +403,38 @@ export async function fetchAndStoreArticles(): Promise<{ imported: number; error
 
         // AI curation: filter relevance + rewrite title for SEO + classify category
         const aiResult = await aiCurate(item.title, excerpt)
-        if (!aiResult) continue // AI rejected as irrelevant or failed — skip article
+
+        // If AI confirmed irrelevant → skip
+        if (aiResult.kind === "irrelevant") continue
+
+        // If AI errored (no credits, timeout, etc.) → fallback to keyword-based filter
+        if (aiResult.kind === "error") {
+          const relevance = keywordRelevanceCheck(item.title, excerpt)
+          if (relevance === "irrelevant") continue
+          // If "unknown" or "relevant" — let it through (better to have than not)
+        }
 
         let categoryId: string | null = null
-        const seoTitle = aiResult.seoTitle
+        let seoTitle: string | null = null
+        let categorySlug: string | null = null
 
-        // Look up category ID by slug
-        const { data: cat } = await supabase
-          .from("categories")
-          .select("id")
-          .eq("slug", aiResult.categorySlug)
-          .single()
-        if (cat) categoryId = cat.id
+        if (aiResult.kind === "ok") {
+          seoTitle = aiResult.seoTitle
+          categorySlug = aiResult.categorySlug
+        } else {
+          // AI failed → categorize via keywords as fallback
+          categorySlug = keywordCategorize(item.title, excerpt)
+        }
+
+        // Look up category ID by slug (works for both AI and keyword fallback)
+        if (categorySlug) {
+          const { data: cat } = await supabase
+            .from("categories")
+            .select("id")
+            .eq("slug", categorySlug)
+            .single()
+          if (cat) categoryId = cat.id
+        }
 
         const { error } = await supabase.from("articles").insert({
           title: seoTitle || item.title,
@@ -353,7 +446,7 @@ export async function fetchAndStoreArticles(): Promise<{ imported: number; error
           category_id: categoryId,
           source_url: item.link,
           source_name: source.name,
-          is_ai_curated: !!aiResult,
+          is_ai_curated: aiResult.kind === "ok",
           status: "published",
           published_at: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
         })
