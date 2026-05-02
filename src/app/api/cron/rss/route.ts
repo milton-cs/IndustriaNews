@@ -16,17 +16,21 @@ export async function GET(request: NextRequest) {
 
   // Log start to a tracking events table (uses existing tracking_events with custom type)
   const supabase = createAdminClient()
-  await supabase.from("tracking_events").insert({
-    event_type: "cron_rss_start",
-    metadata: { sources: sourcesUsed, count: sourcesUsed.length, version: "v5-instrumented", startedAt: startTime },
-  }).then(() => {}).catch(() => {})
+  try {
+    await supabase.from("tracking_events").insert({
+      event_type: "cron_rss_start",
+      metadata: { sources: sourcesUsed, count: sourcesUsed.length, version: "v5-instrumented", startedAt: startTime },
+    })
+  } catch {}
 
   const result = await fetchAndStoreArticles()
 
-  await supabase.from("tracking_events").insert({
-    event_type: "cron_rss_end",
-    metadata: { imported: result.imported, errors: result.errors, durationMs: Date.now() - new Date(startTime).getTime() },
-  }).then(() => {}).catch(() => {})
+  try {
+    await supabase.from("tracking_events").insert({
+      event_type: "cron_rss_end",
+      metadata: { imported: result.imported, errors: result.errors, durationMs: Date.now() - new Date(startTime).getTime() },
+    })
+  } catch {}
 
   return NextResponse.json({
     ok: true,
