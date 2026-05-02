@@ -138,6 +138,11 @@ Se irrelevante: {"relevant": false}`
 }
 
 const parser = new Parser({
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (compatible; IndustriaNewsBot/1.0; +https://industrianews.com)',
+    'Accept': 'application/rss+xml, application/xml, text/xml, application/atom+xml, */*',
+  },
+  timeout: 15000,
   customFields: {
     item: [
       ['media:content', 'media:content', { keepArray: true }],
@@ -269,7 +274,6 @@ async function fetchFullArticleContent(articleUrl: string): Promise<string | nul
 
 export const RSS_SOURCES = [
   // Fontes originais
-  { url: "https://noticias.portaldaindustria.com.br/rss", name: "Portal da Indústria" },
   { url: "https://industriasa.com.br/feed/", name: "Indústria SA" },
   { url: "https://gironews.com/feed/", name: "Giro News" },
   { url: "https://clickpetroleoegas.com.br/feed/", name: "Click Petróleo e Gás" },
@@ -277,11 +281,8 @@ export const RSS_SOURCES = [
   { url: "https://revistamineracao.com.br/feed/", name: "Revista Mineração" },
   { url: "https://www.fiesp.com.br/feed/", name: "FIESP" },
   // Grandes portais
-  { url: "https://valor.globo.com/tudo-sobre/setor/industria-setor-industrial/rss", name: "Valor Econômico" },
-  { url: "https://exame.com/noticias-sobre/industria/feed/", name: "Exame" },
   { url: "https://veja.abril.com.br/noticias-sobre/industria/feed/", name: "Veja" },
   // Confederações e Associações
-  { url: "https://cni.portaldaindustria.com.br/rss", name: "CNI" },
   { url: "https://www.abinee.org.br/noticias/todas/feed/", name: "ABINEE" },
   { url: "https://abia.org.br/noticias/feed/", name: "ABIA" },
   { url: "https://abiquim.org.br/comunicacao/noticias/feed/", name: "ABIQUIM" },
