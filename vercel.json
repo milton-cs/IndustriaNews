@@ -12,10 +12,5 @@
       "path": "/api/cron/monthly-reports",
       "schedule": "0 6 1 * *"
     }
-  ],
-  "functions": {
-    "src/app/api/cron/rss/route.ts": {
-      "maxDuration": 300
-    }
-  }
+  ]
 }
