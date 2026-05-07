@@ -4,6 +4,8 @@ Plataforma SaaS para o setor industrial brasileiro: portal de noticias + revista
 
 **Live:** https://industrianews.com
 
+<!-- Force redeploy: 2026-05-07 -->
+
 ## Stack
 
 - **Framework:** Next.js 16 (App Router, Server Components)

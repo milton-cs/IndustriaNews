@@ -29,7 +29,7 @@ export async function GET() {
     deployedAt: new Date().toISOString(),
     rssSources: RSS_SOURCES.map((s) => s.name),
     rssCount: RSS_SOURCES.length,
-    version: "diag-2026-04-28-v4-keyword-fallback",
+    version: "diag-2026-05-07-v7-force-redeploy",
     fallbackBehavior: "AI failure → keyword filter + categorization (no full skip)",
     fullContentFetch: "enabled",
     anthropic: { hasKey, keyPrefix, aiTest },
