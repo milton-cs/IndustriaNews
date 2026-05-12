@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/rss",
+      "path": "/api/cron/rss-v8",
       "schedule": "0 8 * * *"
     },
     {
